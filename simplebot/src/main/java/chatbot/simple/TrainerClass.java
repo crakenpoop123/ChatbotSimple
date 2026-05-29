@@ -52,7 +52,7 @@ public class TrainerClass
 
         Object[] uniqueTokens = neuralNet.tokenise(predictLength, inputString);
         
-        trainModel(predictLength, uniqueTokens, 20, maxCorrelationDepth);
+        trainModel(predictLength, uniqueTokens, 100, maxCorrelationDepth);
         
     }
     
@@ -67,7 +67,7 @@ public class TrainerClass
         // Initialise the model
         Map<Integer, float[][]> modelWeights = new HashMap<>();
         Map<Integer, float[]> modelBiases = new HashMap<>();
-        final short hiddenLayers = 2;
+        final short hiddenLayers = 5;
         final int hiddenLayerWidth = maxCorrelationDepth * 3;
         ArrayList<Float> output = new ArrayList<Float>();
         

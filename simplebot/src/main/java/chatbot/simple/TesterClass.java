@@ -30,10 +30,12 @@ public class TesterClass
     static String currChars;
     static String predictedChars;
     static ArrayList<Float>[] modelOutputs;
-    static Float[] tokenisedPrompt;
-
+    static String[] tokenisedPrompt;
+    static short maxCorrelationDepth = 10;
+    static String[] currentStrings = new String[maxCorrelationDepth];
 
     private NeuralNet neuralNet = new NeuralNet();
+    
 
     public static void testChatbot(int predictLength, String prompt) throws IOException
     {
@@ -62,20 +64,36 @@ public class TesterClass
             modelBiases.put(key, FloatTofloat(value));
         });
         String[] tokens = ObjectToString((Object[]) data[2]);
+        ArrayList<Float> output = new ArrayList<>();
 
         System.out.println("data seperated");
         System.out.println("tokens length: " + tokens.length);
         System.out.println("tokens: " + Arrays.toString(tokens));
-        System.out.println("modelBiases.get(1): " + Arrays.toString(modelBiases.get(1)));
+        System.out.println("modelBiases.get(3): " + Arrays.toString(modelBiases.get(3)));
         System.out.println("modelBiases.size(): " + modelBiases.size());
 
         
         for (int predictions = 0; predictions < 100; predictions++)
         {
-            tokenisedPrompt = ObjectToFloat(NeuralNet.tokenise(tokens[0].length(), prompt.substring(prompt.length() - modelWeights.get(0).length, prompt.length())));
-            
-            modelOutputs = NeuralNet.calculateModel((ArrayList) Arrays.asList(tokenisedPrompt), modelWeights, modelBiases);
-            String token = tokens[modelOutputs[modelOutputs.length].indexOf(Collections.max(modelOutputs[modelOutputs.length]))];
+            output.clear();
+            int promptLength = prompt.length();
+            float[] tokenisedFloats = new float[maxCorrelationDepth];
+            for (int currentString = 0; currentString < maxCorrelationDepth; currentString++)
+            {
+                currentStrings[currentString] = prompt.substring(promptLength - maxCorrelationDepth, promptLength);
+                // System.out.println("currentStrings[" + currentString + "]: " + currentStrings[currentString]);
+                
+                tokenisedFloats[currentString] += Arrays.asList(tokens).indexOf((Object)currentStrings[currentString]);
+            }
+            // tokenisedPrompt = ObjectToFloat(NeuralNet.tokenise(tokens[0].length(), prompt.substring(prompt.length() - modelWeights.get(0).length, prompt.length())));
+
+            for (int inputValue = 0; inputValue < maxCorrelationDepth; inputValue++)
+            {
+                output.add(tokenisedFloats[inputValue]);
+            }
+
+            modelOutputs = NeuralNet.calculateModel(output, modelWeights, modelBiases);
+            String token = tokens[modelOutputs[modelOutputs.length - 1].indexOf(Collections.max(modelOutputs[modelOutputs.length - 1]))];
             prompt += token;
             System.out.print(token);
         }
