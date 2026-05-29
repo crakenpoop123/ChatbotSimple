@@ -19,6 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.sql.Array;
@@ -26,13 +27,15 @@ import java.sql.Array;
 public class TesterClass
 {
     
-    String currChars;
-    String predictedChars;
-    ArrayList<Float>[] modelOutputs;
+    static String currChars;
+    static String predictedChars;
+    static ArrayList<Float>[] modelOutputs;
+    static Float[] tokenisedPrompt;
+
 
     private NeuralNet neuralNet = new NeuralNet();
 
-    public void testChatbot(int predictLength, String prompt) throws IOException
+    public static void testChatbot(int predictLength, String prompt) throws IOException
     {
         
 
@@ -46,30 +49,40 @@ public class TesterClass
             System.out.println("Type a longer prompt");
         }
         
-        // Print the orginal prompt. Makes the output look cleaner
-        System.out.print(prompt);
-        
         Object[] data = readDatabase();
 
         System.out.println("data obtained");
 
-        Map<Integer, Float[][]> modelWeights = (Map<Integer, Float[][]>) data[0];
-        Map<Integer, Float[]> modelBiases = (Map<Integer, Float[]>) data[1];
-        float[] tokens = FloatTofloat((Float[]) data[2]);
+        Map<Integer, float[][]> modelWeights = new HashMap<>();
+        ((Map<Integer, Float[][]>)data[0]).forEach((key, value) -> {
+            modelWeights.put(key, Float2Tofloat2(value));
+        });
+        Map<Integer, float[]> modelBiases = new HashMap<>();
+        ((Map<Integer, Float[]>)data[1]).forEach((key, value) -> {
+            modelBiases.put(key, FloatTofloat(value));
+        });
+        String[] tokens = ObjectToString((Object[]) data[2]);
 
         System.out.println("data seperated");
-        System.out.println(Arrays.toString(tokens));
+        System.out.println("tokens length: " + tokens.length);
+        System.out.println("tokens: " + Arrays.toString(tokens));
+        System.out.println("modelBiases.get(1): " + Arrays.toString(modelBiases.get(1)));
+        System.out.println("modelBiases.size(): " + modelBiases.size());
 
-
-
-        // for (int predictions = 0; predictions < 100; predictions++)
-        // {
-        //     modelOutputs = NeuralNet.calculateModel();
-        // }
+        
+        for (int predictions = 0; predictions < 100; predictions++)
+        {
+            tokenisedPrompt = ObjectToFloat(NeuralNet.tokenise(tokens[0].length(), prompt.substring(prompt.length() - modelWeights.get(0).length, prompt.length())));
+            
+            modelOutputs = NeuralNet.calculateModel((ArrayList) Arrays.asList(tokenisedPrompt), modelWeights, modelBiases);
+            String token = tokens[modelOutputs[modelOutputs.length].indexOf(Collections.max(modelOutputs[modelOutputs.length]))];
+            prompt += token;
+            System.out.print(token);
+        }
 
     }
     
-    public Object[] readDatabase()
+    public static Object[] readDatabase()
     {
 
         Map<Integer, Float[][]> weights = new HashMap<>();
@@ -96,11 +109,11 @@ public class TesterClass
 
         try (Connection conn = DriverManager.getConnection(url, "postgres", new String(password));
         PreparedStatement pstmt = conn.prepareStatement(sql);
-        ResultSet rs = pstmt.executeQuery(sql)) {
+        ResultSet rs = pstmt.executeQuery()) {
             
             while(rs.next())
             {
-                weights.put(rs.getInt("key"), (Float[][]) sqlArrayToObjectArray(rs.getArray("value")));
+                weights.put(rs.getInt("key"), sqlArrayToObjectArray(rs.getArray("value")));
             }
 
         } catch (SQLException e)
@@ -115,7 +128,7 @@ public class TesterClass
 
         try (Connection conn = DriverManager.getConnection(url, "postgres", new String(password));
         PreparedStatement pstmt = conn.prepareStatement(sql);
-        ResultSet rs = pstmt.executeQuery(sql)) {
+        ResultSet rs = pstmt.executeQuery()) {
             
             while(rs.next())
             {
@@ -136,11 +149,13 @@ public class TesterClass
 
         try (Connection conn = DriverManager.getConnection(url, "postgres", new String(password));
         PreparedStatement pstmt = conn.prepareStatement(sql);
-        ResultSet rs = pstmt.executeQuery(sql)) {
+        ResultSet rs = pstmt.executeQuery()) {
             
             while(rs.next())
             {
                 String[] tokenArray = ((String[]) rs.getArray("token").getArray());
+
+                System.out.println("tokenArray: " + tokenArray);
 
                 for (int i = 0; i < tokenArray.length; i++)
                 {
@@ -154,38 +169,79 @@ public class TesterClass
             System.out.println("in catch");
         }
 
+        System.out.println("tokens in readDB: " + tokens.toString());
+
         Object[] output = new Object[3];
         output[0] = weights;
         output[1] = biases;
-        output[2] = (Float[]) tokens.toArray();
+        output[2] = tokens.toArray();
         return output;
 
     }
 
-    public Object[][] sqlArrayToObjectArray(java.sql.Array Array) throws SQLException
+    public static Float[][] sqlArrayToObjectArray(java.sql.Array Array) throws SQLException
     {
-        Object[] objectArray = (Object[]) Array.getArray();
+        Float[][] objectArray = (Float[][]) Array.getArray();
 
         int arraySize = objectArray.length;
 
-        Object[][] outputArray = new Object[arraySize][];
+        Float[][] outputArray = new Float[arraySize][];
 
         for (int i = 0; i < arraySize; i++)
         {
-            outputArray[i] = ((Object[]) ((java.sql.Array) objectArray[i]).getArray());
+            outputArray[i] = objectArray[i];
         }
 
         return outputArray;
     }
 
-    public float[] FloatTofloat(Float[] input)
+    public static float[] FloatTofloat(Float[] input)
+    {
+        int inputLength = input.length;
+        float[] output = new float[inputLength];
+
+        for (int i = 0; i < inputLength; i++)
+        {
+            output[i] = input[i];
+        }
+
+        return output;
+    }
+
+    public static float[][] Float2Tofloat2(Float[][] input)
+    {
+        int inputLength = input.length;
+        float[][] output = new float[inputLength][];
+
+        for (int i = 0; i < inputLength; i++)
+        {
+            output[i] = FloatTofloat(input[i]);
+        }
+
+        return output;
+    }
+
+    public static String[] ObjectToString(Object[] input)
     {
         int inputSize = input.length;
-        float[] output = new float[inputSize];
+        String[] output = new String[inputSize];
 
         for (int i = 0; i < inputSize; i++)
         {
-            output[i] = input[i];
+            output[i] = (String) input[i];
+        }
+
+        return output;
+    }
+
+    public static Float[] ObjectToFloat(Object[] input)
+    {
+        int inputSize = input.length;
+        Float[] output = new Float[inputSize];
+
+        for (int i = 0; i < inputSize; i++)
+        {
+            output[i] = (Float) input[i];
         }
 
         return output;

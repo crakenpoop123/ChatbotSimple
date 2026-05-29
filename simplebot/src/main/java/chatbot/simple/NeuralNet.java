@@ -19,7 +19,7 @@ public class NeuralNet
         return (float)(1 / (1 + Math.exp(-z)));
     }
     
-    public ArrayList<Float>[] calculateModel(ArrayList<Float> output, Map<Integer, float[][]> weights, Map<Integer, float[]> biases)
+    public static ArrayList<Float>[] calculateModel(ArrayList<Float> output, Map<Integer, float[][]> weights, Map<Integer, float[]> biases)
     {
         int layers = biases.size();
         ArrayList<Float>[] activationList = new ArrayList[layers];
@@ -33,7 +33,7 @@ public class NeuralNet
         return activationList;
     }
 
-    public Object[] tokenise(int predictLength, String inputString)
+    public static Object[] tokenise(int predictLength, String inputString)
     {
         String currChar = "";
         ArrayList<String> uniqueTokens = new ArrayList<>();
@@ -50,7 +50,7 @@ public class NeuralNet
         return uniqueTokens.toArray();
     }
 
-    public ArrayList<Float> calculateLayer(ArrayList<Float> inputs, float[][] weights, float[] biases)
+    public static ArrayList<Float> calculateLayer(ArrayList<Float> inputs, float[][] weights, float[] biases)
     {
         // System.out.println("input size: " + inputs.size());
         // System.out.println("biases length: " + biases.length);
