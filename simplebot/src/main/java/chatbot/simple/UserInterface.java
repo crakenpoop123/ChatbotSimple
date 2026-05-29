@@ -21,6 +21,7 @@ public class UserInterface
     static String prompt;
     static int predictLength;
     
+
     public static void main(String[] args)
     {
         // Remnant of the training process. Left in so you can see how I trained the chatbot.

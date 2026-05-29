@@ -37,7 +37,6 @@ public class TrainerClass
     public void trainChatbot() throws IOException
     {
         // Set up the file paths using relative paths
-        final Path outputPath = Paths.get("resources/GenerativeProbabilities.txt");
         final Path inputPath = Paths.get("resources/Dataset.txt");
        
         //Convert the input .txt file to a string and do some preprocessing
@@ -193,11 +192,11 @@ public class TrainerClass
             
         }
         
-        uploadToDB(modelWeights, modelBiases);
+        uploadToDB(modelWeights, modelBiases, tokens);
 
     }
     
-    public void uploadToDB(Map<Integer, float[][]>modelWeights, Map<Integer, float[]> modelBiases)
+    public void uploadToDB(Map<Integer, float[][]>modelWeights, Map<Integer, float[]> modelBiases, Object[] uniqueTokens)
     {
         
 
@@ -215,6 +214,8 @@ public class TrainerClass
 
         System.out.println("after url");
 
+            
+        
         modelWeights.forEach((key, value) ->{
 
             String sql = "INSERT INTO weights(key,value) VALUES(?,?)" + 
@@ -247,6 +248,73 @@ public class TrainerClass
             }
 
         });
+
+        
+        
+        modelBiases.forEach((key, value) ->{
+
+            String sql = "INSERT INTO biases(key,value) VALUES(?,?)" + 
+            "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value";
+            
+            System.out.println("in .forEach()");
+            System.out.println("sql: " + sql);
+
+            try (Connection conn = DriverManager.getConnection(url, "postgres", new String(password));
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                System.out.println("in try");
+
+                Float[] newValue = new Float[value.length];
+                
+                for (int i = 0; i < value.length; i++)
+                {
+                    newValue[i] = value[i];
+                }
+                
+                Array sqlArray = conn.createArrayOf("FLOAT", newValue);
+
+                System.out.println("after array");
+
+                pstmt.setInt(1, key);
+                pstmt.setArray(2, sqlArray);
+
+                System.out.println("after pstmt.set");
+
+                int rowsInserted = pstmt.executeUpdate();
+                System.out.println(rowsInserted + " rows inserted.");
+
+            } catch (SQLException e)
+            {
+                System.err.println(e.getMessage());
+                System.out.println("in catch");
+            }
+
+        });
+
+
+        
+        String sql = "INSERT INTO tokens(token) VALUES(?)";
+        
+        System.out.println("in .forEach()");
+        System.out.println("sql: " + sql);
+        try (Connection conn = DriverManager.getConnection(url, "postgres", new String(password));
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            System.out.println("in try");
+
+            pstmt.setArray(1, conn.createArrayOf("TEXT", uniqueTokens));
+
+            System.out.println("after set");
+
+            int rowsInserted = pstmt.executeUpdate();
+            System.out.println(rowsInserted + " rows inserted.");
+        } catch (SQLException e)
+        {
+            System.err.println(e.getMessage());
+            System.out.println("in catch");
+        }
+
+
     }
 
     public Object[] initModel(Map<Integer, float[][]> modelWeights, Map<Integer, float[]> modelBiases, int maxCorrelationDepth, int hiddenLayers, int tokenSize, int hiddenLayerWidth)
