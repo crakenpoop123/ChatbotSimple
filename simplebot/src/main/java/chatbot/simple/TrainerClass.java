@@ -293,9 +293,24 @@ public class TrainerClass
 
 
         
-        String sql = "INSERT INTO tokens(token) VALUES(?)";
+        String sql = "TRUNCATE TABLE tokens";
         
-        System.out.println("in .forEach()");
+        System.out.println("sql: " + sql);
+        try (Connection conn = DriverManager.getConnection(url, "postgres", new String(password));
+        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            System.out.println("in try");
+
+            pstmt.executeUpdate();
+        } catch (SQLException e)
+        {
+            System.err.println(e.getMessage());
+            System.out.println("in catch");
+        }
+
+
+        sql = "INSERT INTO tokens(token) VALUES(?)";
+
         System.out.println("sql: " + sql);
         try (Connection conn = DriverManager.getConnection(url, "postgres", new String(password));
         PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -313,7 +328,6 @@ public class TrainerClass
             System.err.println(e.getMessage());
             System.out.println("in catch");
         }
-
 
     }
 

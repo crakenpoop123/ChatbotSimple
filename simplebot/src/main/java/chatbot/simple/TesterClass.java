@@ -93,9 +93,12 @@ public class TesterClass
             }
 
             modelOutputs = NeuralNet.calculateModel(output, modelWeights, modelBiases);
+
+            System.out.println(modelOutputs[modelOutputs.length - 1].toString());
+
             String token = tokens[modelOutputs[modelOutputs.length - 1].indexOf(Collections.max(modelOutputs[modelOutputs.length - 1]))];
             prompt += token;
-            System.out.print(token);
+            // System.out.print(token);
         }
 
     }

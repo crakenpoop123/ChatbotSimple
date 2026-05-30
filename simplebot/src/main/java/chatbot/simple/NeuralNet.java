@@ -295,7 +295,8 @@ public class NeuralNet
         for (int j = 0; j < delta.length; j++)
         {
             float out = activations[L].get(j); // output
-            float delCostDelA = 2 * (out - target[j]); // Partial derivative of cost with respect to activation
+            // System.out.println("IQRange: " + (IQRange(ObjectTofloat(activations[L].toArray()))*0.7 + 0.3));
+            float delCostDelA = (float) (2 * (out - target[j]) * ((IQRange(ObjectTofloat(activations[L].toArray())))*0.7 + 0.3)); // Partial derivative of cost with respect to activation
             float sigmaPrime = sigmoid(zArray[L][j]) * (1 - sigmoid(zArray[L][j])); // derivative of sigmoid
             delta[j] = delCostDelA * sigmaPrime;
         }
@@ -436,4 +437,32 @@ public class NeuralNet
 
         return output;
     }
+
+    public static float IQRange(float[] input)
+    {
+        float[] sortedInput = input;
+        Arrays.sort(sortedInput);
+
+        int LQIndex = (int) Math.floor(sortedInput.length/4);
+        int UQIndex = (int) Math.floor(3 * sortedInput.length/4);
+
+        float IQRange = sortedInput[UQIndex] - sortedInput[LQIndex];
+
+        return IQRange;
+
+    }
+
+    public static float[] ObjectTofloat(Object[] input)
+    {
+        int inputLength = input.length;
+        float[] output = new float[inputLength];
+
+        for (int i = 0; i < inputLength; i++)
+        {
+            output[i] = (float) input[i];
+        }
+
+        return output;
+    }
+
 }
