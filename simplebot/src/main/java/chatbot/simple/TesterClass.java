@@ -70,8 +70,8 @@ public class TesterClass
         System.out.println("tokens length: " + tokens.length);
         System.out.println("tokens: " + Arrays.toString(tokens));
         System.out.println("modelBiases.get(3): " + Arrays.toString(modelBiases.get(3)));
-        System.out.println("modelBiases.size(): " + modelBiases.size());
-        System.out.println("modelBiases keySet: " + ((Map<Integer, Float[]>)data[1]).keySet());
+        // System.out.println("modelBiases.size(): " + modelBiases.size());
+        // System.out.println("modelBiases keySet: " + ((Map<Integer, Float[]>)data[1]).keySet());
 
         
         for (int predictions = 0; predictions < 100; predictions++)
@@ -93,16 +93,18 @@ public class TesterClass
                 output.add(tokenisedFloats[inputValue]);
             }
 
-            System.out.println("output: " + output.toString());
-            System.out.println("current Strings: " + Arrays.toString(currentStrings));
 
             modelOutputs = NeuralNet.calculateModel(output, modelWeights, modelBiases);
 
-            System.out.println(modelOutputs[modelOutputs.length - 1].toString());
-
+            // if (predictions < 5)
+            // {
+                // System.out.println("output: " + output.toString());
+                // System.out.println("current Strings: " + Arrays.toString(currentStrings));
+                // System.out.println(modelOutputs[modelOutputs.length - 1].toString());
+            // }
             String token = tokens[modelOutputs[modelOutputs.length - 1].indexOf(Collections.max(modelOutputs[modelOutputs.length - 1]))];
             prompt += token;
-            // System.out.print(token);
+            System.out.print(token);
         }
 
     }

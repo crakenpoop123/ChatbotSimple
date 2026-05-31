@@ -52,7 +52,7 @@ public class TrainerClass
 
         Object[] uniqueTokens = neuralNet.tokenise(predictLength, inputString);
         
-        trainModel(predictLength, uniqueTokens, 200, maxCorrelationDepth);
+        trainModel(predictLength, uniqueTokens, 100, maxCorrelationDepth);
         
     }
     
@@ -164,7 +164,7 @@ public class TrainerClass
                     //     System.out.println("modelWeights value length" + key + ": " + value.length);
                     // });
 
-                    Object[] adjustedModel = NeuralNet.tweakModel(modelBiases, modelWeights, backpropOutputs, targets, 1000000.0f);
+                    Object[] adjustedModel = NeuralNet.tweakModel(modelBiases, modelWeights, backpropOutputs, targets, 0.01f);
                         
                     ((HashMap<Integer, float[][]>) adjustedModel[0]).forEach((key, value) ->{
                         if (!modelWeights.get(key).equals(value))
@@ -412,6 +412,13 @@ public class TrainerClass
                 for (int weight = 0; weight < randomWeights.length; weight++)
                 {
                     randomWeights[weight] = (float)Math.random();
+                    if (neuronLayer != 0)
+                    {
+                        randomWeights[weight] /= randomWeights.length;
+                    }else
+                    {
+                        randomWeights[weight] /= (tokenSize / 2);
+                    }
                 }
                 layerWeights[neuron] = randomWeights;
                 // System.out.print(Arrays.toString(randomWeights));

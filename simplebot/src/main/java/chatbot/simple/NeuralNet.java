@@ -24,6 +24,8 @@ public class NeuralNet
         int layers = biases.size();
         // System.out.println("layers: " + layers);
 
+        // System.out.println("input to calculateModel: " + output.toString());
+
         ArrayList<Float>[] activationList = new ArrayList[layers];
         activationList[0] = output;
         
@@ -32,6 +34,10 @@ public class NeuralNet
             // System.out.println("output.size()" + output.size());
             output = new ArrayList<>(calculateLayer(output, weights.get(layer), biases.get(layer + 1)));
             activationList[layer + 1] = output;
+            
+            // System.out.println("input to layer " + layer + ": " + output.toString());
+            // System.out.println("biases for layer " + (layer + 1) + ": " + Arrays.toString(biases.get(layer + 1)));
+            // System.out.println("weights for layer " + layer + ", node 0: " + Arrays.toString(weights.get(layer)[0]));
         }
         return activationList;
     }
@@ -294,19 +300,18 @@ public class NeuralNet
         int L = layers - 1;
 
         float[] normOutputs = softmax(ObjectTofloat(activations[L].toArray()));
-        float[] normTargets = softmax(target);
 
         // delta for output layer
         float[] delta = new float[activations[L].size()];
         for (int j = 0; j < delta.length; j++)
         {
             float out = normOutputs[j];
-            float targ = normTargets[j];
+            float targ = target[j];
             // System.out.println("IQRange: " + (IQRange(ObjectTofloat(activations[L].toArray()))*0.7 + 0.3));
-            float delCostDelA = (float) (2 * (out - targ)); // Partial derivative of cost with respect to activation
+            float delCostDelA = (float) (2 * ((out + activations[L].get(j))/2 - targ)); // Partial derivative of cost with respect to activation
             float sigmaPrime = sigmoid(zArray[L][j]) * (1 - sigmoid(zArray[L][j])); // derivative of sigmoid
-            float biasShift = activations[L].get(j) - biases.get(L)[j];
-            delta[j] = delCostDelA * sigmaPrime * biasShift;
+            // float biasShift = activations[L].get(j) - biases.get(L)[j];
+            delta[j] = delCostDelA * sigmaPrime;
         }
 
         // Comput weight gradient
@@ -361,37 +366,6 @@ public class NeuralNet
         return output;
     }
 
-    public static float findGradient(float z, float input, float output, float weight, float target, short gradType)
-    { // No longer used
-        // Del Cost over del input
-        float costInputGrad = 2 * (output - target);
-
-        // Del input over del z
-        float inputZGrad = sigmoid(z) * (1 - sigmoid(z));
-
-        float zGrad = 0;
-        if (gradType == 0)
-        {
-            // Del z over del weight
-            zGrad = input;
-        } else if (gradType == 1)
-        {
-            // Del z over del bias
-            zGrad = 1;
-        } else 
-        {
-            // Del z over del input
-            // Outputs the target for the previous neuron
-            zGrad = weight;
-        }
-        // Del cost over del weight
-        float costGrad = costInputGrad * inputZGrad * zGrad;
-
-        // System.out.println("costGrad: " + costGrad);
-
-        return costGrad;
-    }
-
     public static float calculateWeightedSum(float[] inputs, float[] weights, float bias)
     {
         float sum = 0;
@@ -415,11 +389,10 @@ public class NeuralNet
         for (int prediction = 0; prediction < output.length; prediction++)
         {
             float[] normOutputs = softmax(output[prediction]);
-            float[] normTargets = softmax(target[prediction]);
             entries += output[prediction].length;
             for (int node = 0; node < output[prediction].length; node++)
             {
-                cost += Math.pow((normOutputs[node]) - normTargets[node],  2);
+                cost += Math.pow(output[prediction][node] - target[prediction][node],  2);
             }
         }
         return cost / entries;
