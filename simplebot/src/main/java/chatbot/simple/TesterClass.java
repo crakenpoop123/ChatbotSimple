@@ -71,6 +71,7 @@ public class TesterClass
         System.out.println("tokens: " + Arrays.toString(tokens));
         System.out.println("modelBiases.get(3): " + Arrays.toString(modelBiases.get(3)));
         System.out.println("modelBiases.size(): " + modelBiases.size());
+        System.out.println("modelBiases keySet: " + ((Map<Integer, Float[]>)data[1]).keySet());
 
         
         for (int predictions = 0; predictions < 100; predictions++)
@@ -80,7 +81,7 @@ public class TesterClass
             float[] tokenisedFloats = new float[maxCorrelationDepth];
             for (int currentString = 0; currentString < maxCorrelationDepth; currentString++)
             {
-                currentStrings[currentString] = prompt.substring(promptLength - maxCorrelationDepth, promptLength);
+                currentStrings[currentString] = prompt.substring(promptLength - maxCorrelationDepth + currentString, promptLength - maxCorrelationDepth + currentString + 1);
                 // System.out.println("currentStrings[" + currentString + "]: " + currentStrings[currentString]);
                 
                 tokenisedFloats[currentString] += Arrays.asList(tokens).indexOf((Object)currentStrings[currentString]);
@@ -91,6 +92,9 @@ public class TesterClass
             {
                 output.add(tokenisedFloats[inputValue]);
             }
+
+            System.out.println("output: " + output.toString());
+            System.out.println("current Strings: " + Arrays.toString(currentStrings));
 
             modelOutputs = NeuralNet.calculateModel(output, modelWeights, modelBiases);
 

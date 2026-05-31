@@ -22,11 +22,14 @@ public class NeuralNet
     public static ArrayList<Float>[] calculateModel(ArrayList<Float> output, Map<Integer, float[][]> weights, Map<Integer, float[]> biases)
     {
         int layers = biases.size();
+        // System.out.println("layers: " + layers);
+
         ArrayList<Float>[] activationList = new ArrayList[layers];
         activationList[0] = output;
         
         for (int layer = 0; layer < layers - 1; layer++)
         {
+            // System.out.println("output.size()" + output.size());
             output = new ArrayList<>(calculateLayer(output, weights.get(layer), biases.get(layer + 1)));
             activationList[layer + 1] = output;
         }
@@ -290,15 +293,20 @@ public class NeuralNet
 
         int L = layers - 1;
 
+        float[] normOutputs = softmax(ObjectTofloat(activations[L].toArray()));
+        float[] normTargets = softmax(target);
+
         // delta for output layer
         float[] delta = new float[activations[L].size()];
         for (int j = 0; j < delta.length; j++)
         {
-            float out = activations[L].get(j); // output
+            float out = normOutputs[j];
+            float targ = normTargets[j];
             // System.out.println("IQRange: " + (IQRange(ObjectTofloat(activations[L].toArray()))*0.7 + 0.3));
-            float delCostDelA = (float) (2 * (out - target[j]) * ((IQRange(ObjectTofloat(activations[L].toArray())))*0.7 + 0.3)); // Partial derivative of cost with respect to activation
+            float delCostDelA = (float) (2 * (out - targ)); // Partial derivative of cost with respect to activation
             float sigmaPrime = sigmoid(zArray[L][j]) * (1 - sigmoid(zArray[L][j])); // derivative of sigmoid
-            delta[j] = delCostDelA * sigmaPrime;
+            float biasShift = activations[L].get(j) - biases.get(L)[j];
+            delta[j] = delCostDelA * sigmaPrime * biasShift;
         }
 
         // Comput weight gradient
@@ -403,12 +411,15 @@ public class NeuralNet
 
         // System.out.println("cost output length: " + output.length);
 
+
         for (int prediction = 0; prediction < output.length; prediction++)
         {
+            float[] normOutputs = softmax(output[prediction]);
+            float[] normTargets = softmax(target[prediction]);
             entries += output[prediction].length;
             for (int node = 0; node < output[prediction].length; node++)
             {
-                cost += Math.pow(output[prediction][node] - target[prediction][node],  2);
+                cost += Math.pow((normOutputs[node]) - normTargets[node],  2);
             }
         }
         return cost / entries;
@@ -463,6 +474,26 @@ public class NeuralNet
         }
 
         return output;
+    }
+
+    public static float[] softmax(float[] inputs)
+    {
+        int inputsLength = inputs.length;
+        float[] outputs = new float[inputsLength];
+
+        float sumPowers = 0;
+        // Sum the powers of e^inputs[index]. This will become the denominator in the softmax function
+        for (int index = 0; index < inputsLength; index++)
+        {
+            sumPowers += Math.exp(inputs[index]);
+        }
+
+        for (int outputIndex = 0; outputIndex < inputsLength; outputIndex++)
+        {
+            outputs[outputIndex] = (float)Math.exp(inputs[outputIndex])/sumPowers;
+        }
+
+        return outputs;
     }
 
 }

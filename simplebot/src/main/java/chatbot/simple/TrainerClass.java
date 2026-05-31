@@ -52,7 +52,7 @@ public class TrainerClass
 
         Object[] uniqueTokens = neuralNet.tokenise(predictLength, inputString);
         
-        trainModel(predictLength, uniqueTokens, 100, maxCorrelationDepth);
+        trainModel(predictLength, uniqueTokens, 200, maxCorrelationDepth);
         
     }
     
@@ -93,6 +93,10 @@ public class TrainerClass
 
         float[][] targets = new float[backpropSampleSize][modelBiases.get(hiddenLayers + 1).length];
         
+        // while(backpropSampleSize > 0)
+        // {
+        //     System.out.println(modelBiases.keySet());
+        // }
         // Train the ai for many generations
         for(int epoch = 0; epoch < epochs; epoch++)
         {
@@ -160,7 +164,7 @@ public class TrainerClass
                     //     System.out.println("modelWeights value length" + key + ": " + value.length);
                     // });
 
-                    Object[] adjustedModel = NeuralNet.tweakModel(modelBiases, modelWeights, backpropOutputs, targets, 5000.0f);
+                    Object[] adjustedModel = NeuralNet.tweakModel(modelBiases, modelWeights, backpropOutputs, targets, 1000000.0f);
                         
                     ((HashMap<Integer, float[][]>) adjustedModel[0]).forEach((key, value) ->{
                         if (!modelWeights.get(key).equals(value))
@@ -214,18 +218,31 @@ public class TrainerClass
 
         System.out.println("after url");
 
+        String sql1 = "TRUNCATE TABLE weights";
+        
+        System.out.println("sql: " + sql1);
+        try (Connection conn = DriverManager.getConnection(url, "postgres", new String(password));
+        PreparedStatement pstmt = conn.prepareStatement(sql1)) {
             
+            System.out.println("in try");
+
+            pstmt.executeUpdate();
+        } catch (SQLException e)
+        {
+            System.err.println(e.getMessage());
+            System.out.println("in catch");
+        }
         
         modelWeights.forEach((key, value) ->{
 
-            String sql = "INSERT INTO weights(key,value) VALUES(?,?)" + 
+            String sql2 = "INSERT INTO weights(key,value) VALUES(?,?)" + 
             "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value";
             
             System.out.println("in .forEach()");
-            System.out.println("sql: " + sql);
+            System.out.println("sql: " + sql2);
 
             try (Connection conn = DriverManager.getConnection(url, "postgres", new String(password));
-            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            PreparedStatement pstmt = conn.prepareStatement(sql2)) {
 
                 System.out.println("in try");
                 
@@ -249,18 +266,31 @@ public class TrainerClass
 
         });
 
+        String sql3 = "TRUNCATE TABLE biases";
         
+        System.out.println("sql: " + sql3);
+        try (Connection conn = DriverManager.getConnection(url, "postgres", new String(password));
+        PreparedStatement pstmt = conn.prepareStatement(sql3)) {
+            
+            System.out.println("in try");
+
+            pstmt.executeUpdate();
+        } catch (SQLException e)
+        {
+            System.err.println(e.getMessage());
+            System.out.println("in catch");
+        }
         
         modelBiases.forEach((key, value) ->{
 
-            String sql = "INSERT INTO biases(key,value) VALUES(?,?)" + 
+            String sql4 = "INSERT INTO biases(key,value) VALUES(?,?)" + 
             "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value";
             
             System.out.println("in .forEach()");
-            System.out.println("sql: " + sql);
+            System.out.println("sql: " + sql4);
 
             try (Connection conn = DriverManager.getConnection(url, "postgres", new String(password));
-            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            PreparedStatement pstmt = conn.prepareStatement(sql4)) {
 
                 System.out.println("in try");
 
@@ -293,11 +323,11 @@ public class TrainerClass
 
 
         
-        String sql = "TRUNCATE TABLE tokens";
+        String sql5 = "TRUNCATE TABLE tokens";
         
-        System.out.println("sql: " + sql);
+        System.out.println("sql: " + sql5);
         try (Connection conn = DriverManager.getConnection(url, "postgres", new String(password));
-        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        PreparedStatement pstmt = conn.prepareStatement(sql5)) {
             
             System.out.println("in try");
 
@@ -309,11 +339,11 @@ public class TrainerClass
         }
 
 
-        sql = "INSERT INTO tokens(token) VALUES(?)";
+        String sql6 = "INSERT INTO tokens(token) VALUES(?)";
 
-        System.out.println("sql: " + sql);
+        System.out.println("sql: " + sql6);
         try (Connection conn = DriverManager.getConnection(url, "postgres", new String(password));
-        PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        PreparedStatement pstmt = conn.prepareStatement(sql6)) {
             
             System.out.println("in try");
 
