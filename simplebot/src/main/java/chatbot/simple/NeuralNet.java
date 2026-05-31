@@ -366,6 +366,43 @@ public class NeuralNet
         return output;
     }
 
+    // public void embeddingLayer(short[] oneHot, float[][] embeddingWeights, float[] embeddingBiases)
+    // {
+    //     int oneHotLength = oneHot.length;
+    //     int embedLength = embeddingWeights[0].length;
+    //     float[] embedding = new float[oneHotLength];
+
+    //     for (int i = 0; i <oneHotLength; i++)
+    //     {
+    //         for (int j = 0; j < embedLength; j++)
+    //         {
+
+
+
+    //         }
+    //     }
+    // }
+
+    public static Float[] oneHot(String item, String[] tokens)
+    {
+        int numOfTokens = tokens.length;
+        Float[] output = new Float[numOfTokens];
+        int itemIndex = Arrays.asList(tokens).indexOf(item);
+
+        for (int token = 0; token < numOfTokens; token++)
+        {
+            if (token == itemIndex)
+            {
+                output[token] = 1.0f;
+            } else
+            {
+                output[token] = 0.0f;
+            }
+        }
+
+        return output;
+    }
+
     public static float calculateWeightedSum(float[] inputs, float[] weights, float bias)
     {
         float sum = 0;
@@ -467,6 +504,19 @@ public class NeuralNet
         }
 
         return outputs;
+    }
+
+    public static String[] ObjectToString(Object[] input)
+    {
+        int inputSize = input.length;
+        String[] output = new String[inputSize];
+
+        for (int i = 0; i < inputSize; i++)
+        {
+            output[i] = (String) input[i];
+        }
+
+        return output;
     }
 
 }

@@ -52,7 +52,7 @@ public class TrainerClass
 
         Object[] uniqueTokens = neuralNet.tokenise(predictLength, inputString);
         
-        trainModel(predictLength, uniqueTokens, 100, maxCorrelationDepth);
+        trainModel(predictLength, uniqueTokens, 1000, maxCorrelationDepth);
         
     }
     
@@ -69,6 +69,7 @@ public class TrainerClass
         Map<Integer, float[]> modelBiases = new HashMap<>();
         final short hiddenLayers = 5;
         final int hiddenLayerWidth = maxCorrelationDepth * 3;
+        Float[][] oneHot = new Float[maxCorrelationDepth][];
         ArrayList<Float> output = new ArrayList<Float>();
         
         // Used to calculate the likelihood of a key appearing:
@@ -108,20 +109,32 @@ public class TrainerClass
 
                 // Partition the relevant tokens
                 
-                float[] input = new float[maxCorrelationDepth];
+                // float[] input = new float[maxCorrelationDepth];
                 
                 for (int currentString = 0; currentString < maxCorrelationDepth; currentString++)
                 {
                     currentStrings[currentString] = inputString.substring(i + predictLength * currentString, i + (currentString + 1) * predictLength);
                     // System.out.println("currentStrings[" + currentString + "]: " + currentStrings[currentString]);
                     
-                    input[currentString] += Arrays.asList(tokens).indexOf((Object)currentStrings[currentString]);
+                    // input[currentString] += Arrays.asList(tokens).indexOf((Object)currentStrings[currentString]);
                 }
                 // Convert the input array into a form usable by the calculateModel method
                 for (int inputValue = 0; inputValue < maxCorrelationDepth; inputValue++)
                 {
-                    output.add(input[inputValue]);
+                    // output.add(input[inputValue]);
+
+                    oneHot[inputValue] = NeuralNet.oneHot(currentStrings[inputValue], NeuralNet.ObjectToString(tokens));
                 }
+
+                int oneHotLength = oneHot.length;
+                for (int tokenOneHot = 0; tokenOneHot < oneHotLength; tokenOneHot++)
+                {
+                    for (int index = 0; index < tokenSize; index++)
+                    {
+                        output.add(oneHot[tokenOneHot][index]);
+                    }
+                }
+
                 // Calculate the output for the model
                 backpropOutputs[(i-1)%backpropSampleSize] = neuralNet.calculateModel(output, modelWeights, modelBiases);
                 // System.out.println("backPropOutputs: " + Arrays.toString(backpropOutputs[(i-1)%backpropSampleSize]));
@@ -365,7 +378,7 @@ public class TrainerClass
     {
         // Setup the neural biases
         // Input/output layers:
-        modelBiases.put(0, new float[maxCorrelationDepth]);
+        modelBiases.put(0, new float[maxCorrelationDepth * tokenSize]);
         modelBiases.put(hiddenLayers + 1, new float[tokenSize]);
         // Hidden layer:
         for (int layer = 0; layer < hiddenLayers; layer++)

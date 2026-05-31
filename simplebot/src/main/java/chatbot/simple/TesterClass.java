@@ -35,6 +35,7 @@ public class TesterClass
     static String[] currentStrings = new String[maxCorrelationDepth];
 
     private NeuralNet neuralNet = new NeuralNet();
+
     
 
     public static void testChatbot(int predictLength, String prompt) throws IOException
@@ -63,7 +64,7 @@ public class TesterClass
         ((Map<Integer, Float[]>)data[1]).forEach((key, value) -> {
             modelBiases.put(key, FloatTofloat(value));
         });
-        String[] tokens = ObjectToString((Object[]) data[2]);
+        String[] tokens = NeuralNet.ObjectToString((Object[]) data[2]);
         ArrayList<Float> output = new ArrayList<>();
 
         System.out.println("data seperated");
@@ -72,36 +73,47 @@ public class TesterClass
         System.out.println("modelBiases.get(3): " + Arrays.toString(modelBiases.get(3)));
         // System.out.println("modelBiases.size(): " + modelBiases.size());
         // System.out.println("modelBiases keySet: " + ((Map<Integer, Float[]>)data[1]).keySet());
-
+        int tokenSize = tokens.length;
+        Float[][] oneHot = new Float[maxCorrelationDepth][];
         
         for (int predictions = 0; predictions < 100; predictions++)
         {
             output.clear();
             int promptLength = prompt.length();
-            float[] tokenisedFloats = new float[maxCorrelationDepth];
+            // float[] tokenisedFloats = new float[maxCorrelationDepth];
             for (int currentString = 0; currentString < maxCorrelationDepth; currentString++)
             {
                 currentStrings[currentString] = prompt.substring(promptLength - maxCorrelationDepth + currentString, promptLength - maxCorrelationDepth + currentString + 1);
                 // System.out.println("currentStrings[" + currentString + "]: " + currentStrings[currentString]);
                 
-                tokenisedFloats[currentString] += Arrays.asList(tokens).indexOf((Object)currentStrings[currentString]);
+                // tokenisedFloats[currentString] += Arrays.asList(tokens).indexOf((Object)currentStrings[currentString]);
             }
             // tokenisedPrompt = ObjectToFloat(NeuralNet.tokenise(tokens[0].length(), prompt.substring(prompt.length() - modelWeights.get(0).length, prompt.length())));
-
+            // Convert the input array into a form usable by the calculateModel method
             for (int inputValue = 0; inputValue < maxCorrelationDepth; inputValue++)
             {
-                output.add(tokenisedFloats[inputValue]);
+                // output.add(input[inputValue]);
+                oneHot[inputValue] = NeuralNet.oneHot(currentStrings[inputValue], NeuralNet.ObjectToString(tokens));
+            }
+
+            int oneHotLength = oneHot.length;
+            for (int tokenOneHot = 0; tokenOneHot < oneHotLength; tokenOneHot++)
+            {
+                for (int index = 0; index < tokenSize; index++)
+                {
+                    output.add(oneHot[tokenOneHot][index]);
+                }
             }
 
 
             modelOutputs = NeuralNet.calculateModel(output, modelWeights, modelBiases);
 
-            // if (predictions < 5)
-            // {
+            if (predictions < 5)
+            {
                 // System.out.println("output: " + output.toString());
                 // System.out.println("current Strings: " + Arrays.toString(currentStrings));
-                // System.out.println(modelOutputs[modelOutputs.length - 1].toString());
-            // }
+                System.out.println(modelOutputs[modelOutputs.length - 1].toString());
+            }
             String token = tokens[modelOutputs[modelOutputs.length - 1].indexOf(Collections.max(modelOutputs[modelOutputs.length - 1]))];
             prompt += token;
             System.out.print(token);
@@ -243,19 +255,6 @@ public class TesterClass
         for (int i = 0; i < inputLength; i++)
         {
             output[i] = FloatTofloat(input[i]);
-        }
-
-        return output;
-    }
-
-    public static String[] ObjectToString(Object[] input)
-    {
-        int inputSize = input.length;
-        String[] output = new String[inputSize];
-
-        for (int i = 0; i < inputSize; i++)
-        {
-            output[i] = (String) input[i];
         }
 
         return output;
