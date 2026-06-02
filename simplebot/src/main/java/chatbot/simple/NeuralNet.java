@@ -188,6 +188,8 @@ public class NeuralNet
             Map<Integer, float[][]> gradW = (HashMap<Integer, float[][]>) gradient[0];
             Map<Integer, float[]> gradB = (HashMap<Integer, float[]>) gradient[1];
 
+            // System.out.println(IQRange(targets[iteration]));
+
             // Add the weight grads
             for (Map.Entry<Integer, float[][]> entries : gradW.entrySet())
             {
@@ -279,6 +281,20 @@ public class NeuralNet
         Map<Integer, float[]> biasesGrad = new HashMap<>();
 
         int layers = activations.length;
+        float entropyScaler = 100f;
+        float entropy = 0;
+
+        // Calculate entropy
+        for (int i = 0; i < activations[layers - 1].size(); i++)
+        {
+            entropy -= target[i] * Math.log(activations[layers - 1].get(i));
+            System.out.println("entropy while being set:" + entropy);
+        }
+
+        if (Math.random() < 0.001)
+        {
+            System.out.println("entropy: " + entropy);
+        }
 
         // compute z values for each layer 1 through layers - 1
         // Used to reduce redundant calculations
@@ -299,16 +315,16 @@ public class NeuralNet
 
         int L = layers - 1;
 
-        float[] normOutputs = softmax(ObjectTofloat(activations[L].toArray()));
+        // float[] normOutputs = softmax(ObjectTofloat(activations[L].toArray()));
 
         // delta for output layer
         float[] delta = new float[activations[L].size()];
         for (int j = 0; j < delta.length; j++)
         {
-            float out = normOutputs[j];
+            // float out = normOutputs[j];
             float targ = target[j];
             // System.out.println("IQRange: " + (IQRange(ObjectTofloat(activations[L].toArray()))*0.7 + 0.3));
-            float delCostDelA = (float) (2 * ((out + activations[L].get(j))/2 - targ)); // Partial derivative of cost with respect to activation
+            float delCostDelA = (float) (2 * (activations[L].get(j) - targ)) - entropy * entropyScaler; // Partial derivative of cost with respect to activation
             float sigmaPrime = sigmoid(zArray[L][j]) * (1 - sigmoid(zArray[L][j])); // derivative of sigmoid
             // float biasShift = activations[L].get(j) - biases.get(L)[j];
             delta[j] = delCostDelA * sigmaPrime;
@@ -468,6 +484,13 @@ public class NeuralNet
         int UQIndex = (int) Math.floor(3 * sortedInput.length/4);
 
         float IQRange = sortedInput[UQIndex] - sortedInput[LQIndex];
+        // System.out.println("Input: " + Arrays.toString(input));
+        // System.out.println("Sorted input: " + Arrays.toString(sortedInput));
+        // System.out.println("IQRange: " + IQRange);
+        // System.out.println("UQRange: " + sortedInput[UQIndex]);
+        // System.out.println("LQRange: " + sortedInput[LQIndex]);
+        // System.out.println("UQIndex: " + UQIndex);
+        // System.out.println("LQIndex: " + LQIndex);
 
         return IQRange;
 
@@ -504,6 +527,19 @@ public class NeuralNet
         }
 
         return outputs;
+    }
+    
+    public static float[] FloatTofloat(Float[] input)
+    {
+        int inputLength = input.length;
+        float[] output = new float[inputLength];
+
+        for (int i = 0; i < inputLength; i++)
+        {
+            output[i] = input[i];
+        }
+
+        return output;
     }
 
     public static String[] ObjectToString(Object[] input)

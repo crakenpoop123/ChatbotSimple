@@ -37,7 +37,7 @@ public class TrainerClass
     public void trainChatbot() throws IOException
     {
         // Set up the file paths using relative paths
-        final Path inputPath = Paths.get("resources/Dataset.txt");
+        final Path inputPath = Paths.get("resources/training_dataADD.txt");
        
         //Convert the input .txt file to a string and do some preprocessing
         final String inputString = Files.readString(inputPath).replaceAll("\r\n|\r|\n|\"|`|~|!|@|#|$|%|^|&|(|)|-|_|=||[|]|;|:|'|,|<|.|>|/", "")
@@ -51,29 +51,30 @@ public class TrainerClass
         int predictLength = 1;
 
         Object[] uniqueTokens = neuralNet.tokenise(predictLength, inputString);
-        
-        trainModel(predictLength, uniqueTokens, 1000, maxCorrelationDepth);
+    
+        trainModel(predictLength, uniqueTokens, 100, maxCorrelationDepth);
         
     }
     
     public void trainModel(int predictLength, Object[] tokens, int epochs, int maxCorrelationDepth) throws IOException
     {
         // Setup the variables
-        final Path inputPath = Paths.get("resources/Dataset2.txt");   
-        final String inputString = Files.readString(inputPath).replaceAll("\\r\\n|\\r|\\n|\"|`|~|!|@|#|$|%|^|&|(|)|-|_|=||[|]|;|:|'|,|<|.|>|/", "")
+        final Path inputPath = Paths.get("resources/training_dataADD.txt");   
+        final String inputString = Files.readString(inputPath).replaceAll("\"|`|~|!|@|#|$|%|^|&|(|)|-|_|=||[|]|;|:|'|,|<|.|>|/", "")
         .replace("|", "").replace("*", "").replace("+", "").replace("{", "").replace("}", "").replace("?", "").toLowerCase();
         String[] currentStrings = new String[maxCorrelationDepth];
         
+        // Used to calculate the likelihood of a key appearing:
+        int tokenSize = tokens.length;
+
         // Initialise the model
         Map<Integer, float[][]> modelWeights = new HashMap<>();
         Map<Integer, float[]> modelBiases = new HashMap<>();
-        final short hiddenLayers = 5;
-        final int hiddenLayerWidth = maxCorrelationDepth * 3;
+        final short hiddenLayers = 3;
+        final int hiddenLayerWidth = maxCorrelationDepth * 5;
         Float[][] oneHot = new Float[maxCorrelationDepth][];
         ArrayList<Float> output = new ArrayList<Float>();
         
-        // Used to calculate the likelihood of a key appearing:
-        int tokenSize = tokens.length;
         
         // Used to improve the model
         int backpropSampleSize = 1000;
@@ -101,7 +102,7 @@ public class TrainerClass
         // Train the ai for many generations
         for(int epoch = 0; epoch < epochs; epoch++)
         {
-            // System.out.println(epoch);
+            System.out.println("Epoch " + epoch);
             for (int i = 1; i < inputString.length() / (maxCorrelationDepth * predictLength) - 2; i++) // inputString.length() / (maxCorrelationDepth * predictLength) - 1
             {
                 // Clear the previous output data
@@ -137,6 +138,7 @@ public class TrainerClass
 
                 // Calculate the output for the model
                 backpropOutputs[(i-1)%backpropSampleSize] = neuralNet.calculateModel(output, modelWeights, modelBiases);
+
                 // System.out.println("backPropOutputs: " + Arrays.toString(backpropOutputs[(i-1)%backpropSampleSize]));
 
                 // Calculate the preferred output for the model
@@ -180,29 +182,32 @@ public class TrainerClass
                     Object[] adjustedModel = NeuralNet.tweakModel(modelBiases, modelWeights, backpropOutputs, targets, 0.01f);
                         
                     ((HashMap<Integer, float[][]>) adjustedModel[0]).forEach((key, value) ->{
-                        if (!modelWeights.get(key).equals(value))
-                        {
-                            System.out.println("modelWeights " + key + ": " + Arrays.toString(modelWeights.get(key)));
-                            System.out.println("value " + key + ": " + Arrays.toString(value));
-                            System.out.println("Model Adjustment Error!");
-                        }
+                        // if (!modelWeights.get(key).equals(value))
+                        // {
+                        //     System.out.println("modelWeights " + key + ": " + Arrays.toString(modelWeights.get(key)));
+                        //     System.out.println("value " + key + ": " + Arrays.toString(value));
+                        //     System.out.println("Model Adjustment Error!");
+                        // }
 
                         modelWeights.put(key, value);
                     });
 
                     ((HashMap<Integer, float[]>) adjustedModel[1]).forEach((key, value) ->{
-                        if (!modelBiases.get(key).equals(value))
-                        {
-                            System.out.println("modelBiases " + key + ": " + Arrays.toString(modelBiases.get(key)));
-                            System.out.println("value " + key + ": " + Arrays.toString(value));
-                            System.out.println("Model Adjustment Error!");
-                        }
+                        // if (!modelBiases.get(key).equals(value))
+                        // {
+                        //     System.out.println("modelBiases " + key + ": " + Arrays.toString(modelBiases.get(key)));
+                        //     System.out.println("value " + key + ": " + Arrays.toString(value));
+                        //     System.out.println("Model Adjustment Error!");
+                        // }
 
                         modelBiases.put(key, value);
                     });
 
-                    System.out.println("MSE: " + adjustedModel[2]);
-                    System.out.println("epoch: " + epoch);
+                    // if (Math.random() < 0.01)
+                    // {
+                        System.out.println("MSE: " + adjustedModel[2]);
+                    // }
+                    // System.out.println("epoch: " + epoch);
                 }
 
             }    

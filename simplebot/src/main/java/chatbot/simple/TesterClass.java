@@ -46,7 +46,7 @@ public class TesterClass
         // Set the initial currChars
         if (prompt.length() >= predictLength)
         {
-            currChars = prompt.substring(prompt.length()-10, prompt.length());
+            currChars = prompt.substring(prompt.length() - maxCorrelationDepth, prompt.length());
         } else
         {
             System.out.println("Type a longer prompt");
@@ -62,7 +62,7 @@ public class TesterClass
         });
         Map<Integer, float[]> modelBiases = new HashMap<>();
         ((Map<Integer, Float[]>)data[1]).forEach((key, value) -> {
-            modelBiases.put(key, FloatTofloat(value));
+            modelBiases.put(key, NeuralNet.FloatTofloat(value));
         });
         String[] tokens = NeuralNet.ObjectToString((Object[]) data[2]);
         ArrayList<Float> output = new ArrayList<>();
@@ -234,19 +234,6 @@ public class TesterClass
         return outputArray;
     }
 
-    public static float[] FloatTofloat(Float[] input)
-    {
-        int inputLength = input.length;
-        float[] output = new float[inputLength];
-
-        for (int i = 0; i < inputLength; i++)
-        {
-            output[i] = input[i];
-        }
-
-        return output;
-    }
-
     public static float[][] Float2Tofloat2(Float[][] input)
     {
         int inputLength = input.length;
@@ -254,7 +241,7 @@ public class TesterClass
 
         for (int i = 0; i < inputLength; i++)
         {
-            output[i] = FloatTofloat(input[i]);
+            output[i] = NeuralNet.FloatTofloat(input[i]);
         }
 
         return output;
