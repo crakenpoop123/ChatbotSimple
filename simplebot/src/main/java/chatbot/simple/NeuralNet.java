@@ -443,21 +443,68 @@ public class NeuralNet
         return sum;
     }
 
-    public static float convolve(float[] kernel, float[] input)
+    public static float[][] iteratedConvolve(float[][] kernel, float[][] input)
+    {
+        int kernelLength = kernel.length;
+
+        if (kernelLength % 2 == 0 || kernel[0].length % 2 == 0)
+        {
+            return new float[0][];
+        }
+
+        int xWidth = input.length;
+        int yWidth = input[0].length;
+
+        int newXWidth = xWidth - kernelLength + 1;
+        int newYWidth = yWidth - kernelLength + 1;
+
+        float[][] output = new float[newXWidth][newYWidth];
+
+        for (int y = 0; y < newYWidth; y++)
+        {
+            for (int x = 0; x < newXWidth; x++)
+            {
+                float[][] currFocus = getConvolve(kernelLength, input, x, y);
+                output[x][y] = convolve(kernel, currFocus);
+            }
+        }
+
+        return output;
+    }
+
+    public static float[][] getConvolve(int kernelLength, float[][] input, int x, int y)
+    {
+        float[][] output = new float[kernelLength][kernelLength];
+        for (int row = 0; row < kernelLength; row++)
+        {
+            for (int coll = 0; coll < kernelLength; coll++)
+            {
+                output[row][coll] = input[x + row][y + row];
+            }
+        }
+
+        return output;
+    }
+
+    public static float convolve(float[][] kernel, float[][] input)
     {
 
-        if (kernel.length != input.length)
+        int rows = kernel.length;
+        int colls = kernel[0].length;
+
+        if (rows != input.length || colls != input[0].length)
         {
             return 0;
         }
 
-        int iterations = kernel.length;
-
         float total = 0;
 
-        for (int iteration = 0; iteration < iterations; iteration++)
+        for (int y = 0; y)
         {
-            total += kernel[iteration] * input[iteration];
+            for (int x = 0; x < rows; x++)
+            {
+                total += kernel[x][y] * input[x][y];
+            }
         }
         return total;
     }
