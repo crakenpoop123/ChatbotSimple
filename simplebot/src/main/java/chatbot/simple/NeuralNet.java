@@ -2,6 +2,7 @@ package chatbot.simple;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public class NeuralNet
             // System.out.println("output.size()" + output.size());
             output = new ArrayList<>(calculateLayer(output, weights.get(layer), biases.get(layer + 1)));
             activationList[layer + 1] = output;
-            
+
             // System.out.println("input to layer " + layer + ": " + output.toString());
             // System.out.println("biases for layer " + (layer + 1) + ": " + Arrays.toString(biases.get(layer + 1)));
             // System.out.println("weights for layer " + layer + ", node 0: " + Arrays.toString(weights.get(layer)[0]));
@@ -281,20 +282,24 @@ public class NeuralNet
         Map<Integer, float[]> biasesGrad = new HashMap<>();
 
         int layers = activations.length;
-        float entropyScaler = 100f;
-        float entropy = 0;
+        // float entropyScaler = 0.03f;
+        // float entropy = 0;
 
         // Calculate entropy
-        for (int i = 0; i < activations[layers - 1].size(); i++)
-        {
-            entropy -= target[i] * Math.log(activations[layers - 1].get(i));
-            System.out.println("entropy while being set:" + entropy);
-        }
+        // for (int i = 0; i < activations[layers - 1].size(); i++)
+        // {
+            // entropy -= target[i] * Math.log(activations[layers - 1].get(i)) / Math.log(2); // Math.log(2) uses mathematical change of base to make this equation in base 2.
+            // System.out.println("entropy while being set:" + entropy);
 
-        if (Math.random() < 0.001)
-        {
-            System.out.println("entropy: " + entropy);
-        }
+            // entropy -= target[i] * Math.log(activations[layers - 1].get(i) + (1 - target[i]) * Math.log(1 - activations[layers - 1].get(i)));
+        // }
+        // entropy /= activations[layers - 1].size();
+
+
+        // if (Math.random() < 0.001)
+        // {
+        //     System.out.println("entropy: " + entropy);
+        // }
 
         // compute z values for each layer 1 through layers - 1
         // Used to reduce redundant calculations
@@ -321,10 +326,17 @@ public class NeuralNet
         float[] delta = new float[activations[L].size()];
         for (int j = 0; j < delta.length; j++)
         {
+            // entropy = (activations[layers - 1].get(j) - target[j])/(activations[layers - 1].get(j) * (1 - activations[layers - 1].get(j)));
+
+            // if (Math.random() < 0.001)
+            // {
+            //     System.out.println("entropy: " + entropy);
+            // }
+            
             // float out = normOutputs[j];
             float targ = target[j];
             // System.out.println("IQRange: " + (IQRange(ObjectTofloat(activations[L].toArray()))*0.7 + 0.3));
-            float delCostDelA = (float) (2 * (activations[L].get(j) - targ)) - entropy * entropyScaler; // Partial derivative of cost with respect to activation
+            float delCostDelA = (float) (2 * (activations[L].get(j) - targ)); // Partial derivative of cost with respect to activation
             float sigmaPrime = sigmoid(zArray[L][j]) * (1 - sigmoid(zArray[L][j])); // derivative of sigmoid
             // float biasShift = activations[L].get(j) - biases.get(L)[j];
             delta[j] = delCostDelA * sigmaPrime;
@@ -429,6 +441,25 @@ public class NeuralNet
         sum += bias;
 
         return sum;
+    }
+
+    public static float convolve(float[] kernel, float[] input)
+    {
+
+        if (kernel.length != input.length)
+        {
+            return 0;
+        }
+
+        int iterations = kernel.length;
+
+        float total = 0;
+
+        for (int iteration = 0; iteration < iterations; iteration++)
+        {
+            total += kernel[iteration] * input[iteration];
+        }
+        return total;
     }
 
     public static double findCost(float[][] output, float[][] target)

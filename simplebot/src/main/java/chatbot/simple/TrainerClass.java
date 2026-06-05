@@ -52,7 +52,7 @@ public class TrainerClass
 
         Object[] uniqueTokens = neuralNet.tokenise(predictLength, inputString);
     
-        trainModel(predictLength, uniqueTokens, 100, maxCorrelationDepth);
+        trainModel(predictLength, uniqueTokens, 20, maxCorrelationDepth);
         
     }
     
@@ -77,7 +77,7 @@ public class TrainerClass
         
         
         // Used to improve the model
-        int backpropSampleSize = 1000;
+        int backpropSampleSize = 100;
         ArrayList<Float>[][] backpropOutputs = new ArrayList[backpropSampleSize][hiddenLayers + 2];
 
 
